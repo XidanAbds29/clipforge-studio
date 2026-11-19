@@ -6,12 +6,11 @@
 
 YouTube & Twitch clips · Chat-spike selection · Local speech captions · Vertical layouts
 
-[![Checks](https://github.com/XidanAbds29/clipforge-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/XidanAbds29/clipforge-studio/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![FFmpeg](https://img.shields.io/badge/Video-FFmpeg-007808?logo=ffmpeg&logoColor=white)
 ![Frontend](https://img.shields.io/badge/Frontend-No_build_dependencies-C0F879?labelColor=151922)
 
-[Quick start](#quick-start) · [Speech captions](#speech-captions-and-editing) · [Live chat](#live-chat-credentials) · [Hosting](#hosting-free-frontend-separate-video-worker)
+[Open live Studio](https://clipforge-studio.abdullahsiham31602.workers.dev/) · [Quick start](#quick-start) · [Speech captions](#speech-captions-and-editing) · [Live chat](#live-chat-credentials) · [Hosting](#hosting-free-frontend-separate-video-worker)
 
 </div>
 
@@ -127,6 +126,20 @@ Never enter platform credentials into the public frontend or commit them. The da
 
 ## Hosting: free frontend, separate video worker
 
+**Live dashboard:** https://clipforge-studio.abdullahsiham31602.workers.dev/
+
+The current deployment uses **Cloudflare Workers Static Assets**, uploaded through the dashboard. It is not Git-linked yet. The website is publicly reachable; rendering jobs and private exports require the operator's worker token. Never publish the token in Git or frontend configuration. The current processing worker runs locally through a temporary HTTPS tunnel: it must stay online, and restarting a quick tunnel can change its URL. This is a development deployment, not a promise of 24/7 cloud rendering.
+
+For a configured Wrangler account, the included static Worker configuration deploys the frontend:
+
+```bash
+python3 scripts/build_frontend.py
+npx wrangler deploy --config wrangler-worker.jsonc
+```
+
+`CLIPFORGE_PUBLIC_WORKER` sets the public HTTPS worker endpoint used by the frontend build. The build explicitly publishes only that URL; it never embeds `CLIPFORGE_API_TOKEN`. If the worker endpoint changes, update the build setting and redeploy, or change it in dashboard Settings. Each browser session needs the private worker token entered separately.
+
+
 **Recommended: Cloudflare Pages for the static dashboard, plus this Python worker on your own computer.** Netlify is also configured. Neither static host runs this Python/FFmpeg pipeline. Publishing the dashboard alone does not create a working cloud renderer.
 
 ```mermaid
@@ -216,7 +229,7 @@ Remote API requests use `Authorization: Bearer <worker-token>`. Media is fetched
 
 ## Development and verification
 
-The current verification run passed all 20 tests, including the HTTP API and actual FFmpeg renders. Live platform connections and Docker deployment still need environment-specific verification.
+The caption and Studio verification run passed 20 tests, including the HTTP API and actual FFmpeg renders. An additional passing build test verifies that worker secrets are not embedded in the public frontend. Live platform connections and Docker deployment still need environment-specific verification.
 
 ```bash
 .venv/bin/python -m unittest discover -s tests -v
@@ -236,7 +249,8 @@ static/                deployable browser dashboard assets
 scripts/build_frontend.py
 requirements.txt
 .env.example
-wrangler.jsonc         Cloudflare Pages output configuration
+wrangler.jsonc         alternative Cloudflare Pages configuration
+wrangler-worker.jsonc  current Cloudflare static Worker configuration
 netlify.toml           alternative static hosting configuration
 Dockerfile             separate video worker
 .github/workflows/ci.yml
@@ -251,3 +265,4 @@ Use footage, streamer likeness, product media, and music that you have appropria
 - [Twitch IRC](https://dev.twitch.tv/docs/chat/irc)
 - [Cloudflare Workers limits](https://developers.cloudflare.com/workers/platform/limits/)
 - [Netlify function limits](https://docs.netlify.com/build/functions/configuration/)
+
