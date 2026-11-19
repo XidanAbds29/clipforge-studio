@@ -1,11 +1,30 @@
+<div align="center">
+
 # Clipforge Studio
 
-**Turn YouTube and Twitch recordings into reviewed vertical clips, with chat-spike evidence and purposeful layouts.**
+### Find the moment. Frame the story. Caption the words.
 
-A lightweight Python/FFmpeg worker and dependency-free web dashboard. Designed for a small operator preparing batches of gameplay content—not a promise of automatic virality, monetization, or fully autonomous editing.
+YouTube & Twitch clips · Chat-spike selection · Local speech captions · Vertical layouts
+
+[![Checks](https://github.com/XidanAbds29/clipforge-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/XidanAbds29/clipforge-studio/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![FFmpeg](https://img.shields.io/badge/Video-FFmpeg-007808?logo=ffmpeg&logoColor=white)
+![Frontend](https://img.shields.io/badge/Frontend-No_build_dependencies-C0F879?labelColor=151922)
+
+[Quick start](#quick-start) · [Speech captions](#speech-captions-and-editing) · [Live chat](#live-chat-credentials) · [Hosting](#hosting-free-frontend-separate-video-worker)
+
+</div>
+
+Clipforge Studio turns gameplay recordings and bounded live captures into short vertical clips. Choose the composition, rank moments using available chat or activity signals, add local speech captions, then review and export.
+
+![Clipforge Studio composition controls](docs/studio.png)
+
+> **Deployment model:** the dashboard can run on Cloudflare Pages or Netlify. Downloading, speech recognition and rendering run on a separate Python/FFmpeg worker. The hosted interface alone does not supply video-processing compute.
 
 ## Features
 
+- **Speech captions:** optional local faster-whisper transcription of each selected excerpt, with word highlight or clean phrase styling; SRT and timed transcript JSON included in exports. No paid speech API is required.
+- **Pacing preset:** optional gentle punch-in accents while keeping the source audio and story order.
 - **Four layouts:** full gameplay with blurred background; vertical center crop; streamer on top/gameplay below; gameplay above a product image or looping product video.
 - **Explicit crop controls:** choose the facecam and gameplay regions as percentages of the original frame. No unreliable claim that a fixed rectangle is automatic face detection.
 - **Chat-driven selection:** timestamped message density, a rolling baseline, author spam caps, reaction-delay compensation, and non-overlapping clips. Each result explains why it was selected.
@@ -63,7 +82,23 @@ For the original workspace installation, run from the parent folder:
 
 Recordings are limited to four hours; downloader file limit is 2 GB per file. Separate high-quality video/audio streams may require additional temporary disk space. Live capture is limited to ten minutes per job. HLS/network latency makes live chat-to-video timing approximate; adjust reaction delay after reviewing your source. A chat spike is an engagement signal, not proof of a good story. Three effective messages in five seconds is the minimum qualifying bin. Chat-only fails rather than silently substituting activity. Auto warns when it falls back. Quiet sources can yield fewer clips than requested.
 
-The application does not identify whether footage is actually GTA VI, understand every joke, automatically transcribe subtitles, train a neural model, or predict virality. Opening hooks are templates or user-supplied. Product video audio is muted; source audio is retained. Facecam cropping is manual. Use clear product text that matches the uploaded asset.
+The application does not identify whether footage is actually GTA VI, understand every joke, train its own neural model, or predict virality. Opening hooks are templates or user-supplied. Product video audio is muted; source audio is retained. Facecam cropping is manual. Use clear product text that matches the uploaded asset.
+
+## Speech captions and editing
+
+To enable automatic captions on a fresh worker:
+
+```bash
+.venv/bin/python -m pip install -r requirements-ai.txt
+.venv/bin/python scripts/prepare_captions.py
+.venv/bin/python app.py
+```
+
+The model is downloaded once into ignored `models/`; warmed models run locally on the CPU without sending clip audio to a cloud provider. `CLIPFORGE_WHISPER_MODEL` selects `tiny`, `base` (default), or `small`. The preparation command downloads the chosen model; use the same environment setting when starting the worker. More accurate models generally require more memory and processing time.
+
+Enable **Caption the spoken audio**, choose **Bold + active word highlight** or **Clean phrase captions**, and optionally enable **Gentle punch-in accents**. Captions come from speech recognition of the mixed source audio, including any in-game dialogue; this version does not isolate or identify the streamer. Opening hook text stays separate and editable. SRT and timed JSON files are included in ZIP exports, and SRT can be downloaded individually. Review and correct the SRT in your editor before publication if the recognizer mishears names, slang, music, overlapping voices or loud game audio. Automatic language detection does not translate speech; the current default font primarily supports Latin-script captions. No speech means no invented subtitles.
+
+The current local worker has the speech engine installed. Other hosts must install the optional AI requirements and prepare a model themselves. The base Dockerfile installs only the core requirements; extend it with `requirements-ai.txt` and a writable model cache for caption-enabled containers.
 
 ## Chat formats
 
@@ -181,6 +216,8 @@ Remote API requests use `Authorization: Bearer <worker-token>`. Media is fetched
 
 ## Development and verification
 
+The current verification run passed all 20 tests, including the HTTP API and actual FFmpeg renders. Live platform connections and Docker deployment still need environment-specific verification.
+
 ```bash
 .venv/bin/python -m unittest discover -s tests -v
 python3 scripts/build_frontend.py
@@ -205,7 +242,7 @@ Dockerfile             separate video worker
 .github/workflows/ci.yml
 ```
 
-Use footage, streamer likeness, product media, and music that you have appropriate rights to process and distribute. Software access and downloading a public URL do not grant resale rights or platform monetization eligibility. MIT applies to the software; media has its own rights.
+Use footage, streamer likeness, product media, and music that you have appropriate rights to process and distribute. Software access and downloading a public URL do not grant resale rights or platform monetization eligibility. Software licensing is left for the repository owner to choose; media has its own rights.
 
 ## Primary references
 
